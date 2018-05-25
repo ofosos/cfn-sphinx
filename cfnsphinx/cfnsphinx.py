@@ -3,6 +3,7 @@ from os.path import basename
 import docutils
 import sphinx
 import yaml
+import json
 from docutils.parsers.rst import directives
 from sphinx.locale import l_, _
 from sphinx.domains import Domain, ObjType, Index
@@ -51,6 +52,18 @@ class CfnParser(rst.Parser):
 
     def parse(self, inputstring, document):
         y = yaml.load(inputstring)
+        exporter = CfnExporter()
+        rest = exporter.from_yaml(y)
+
+        print("parsed a document")
+
+        rst.Parser.parse(self, rest, document)
+
+class CfnParserJson(rst.Parser):
+    supported = ()
+
+    def parse(self, inputstring, document):
+        y = json.loads(inputstring)
         exporter = CfnExporter()
         rest = exporter.from_yaml(y)
 
@@ -330,6 +343,7 @@ def _add_cfn_parser(app):
     source_parsers = app.config._raw_config.get('source_parsers', {})
     if '.yml' not in source_parsers and 'yml' not in source_parsers:
         source_parsers['.yml'] = CfnParser
+        source_parsers['.json'] = CfnParserJson
         app.config._raw_config['source_parsers'] = source_parsers
 
 
