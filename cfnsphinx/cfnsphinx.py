@@ -12,18 +12,21 @@ from sphinx.directives import ObjectDescription
 from sphinx.util.docfields import Field, GroupedField, TypedField
 from sphinx import addnodes
 
+
 class CfnExporter:
     def from_yaml(self, yml):
         reslis = []
 
         name = "CfnStack"
-        reslis.append("{}\n{}\n{}\n\n".format("=" * len(name), name, "=" * len(name)))
+        reslis.append("{}\n{}\n{}\n\n".format("=" * len(name),
+                                              name, "=" * len(name)))
         
         for key, val in yml['Parameters'].items():
             name = key
             typ = val['Type']
 
-            vals = ['Description', 'Default', 'AllowedValues', 'ConstraintDescription']
+            vals = ['Description', 'Default', 'AllowedValues',
+                    'ConstraintDescription']
 
             reslis.append(".. cfn:parameter:: {}".format(name))
             reslis.append("    :type: {}\n".format(typ))
@@ -32,16 +35,16 @@ class CfnExporter:
                     reslis.append("    :{}: {}\n".format(v.lower(), val[v]))
 
             reslis.append("")
-        
+
         for key, val in yml['Resources'].items():
             name = key
             typ = val['Type']
             prop = val['Properties']
-            
+
             reslis.append(".. cfn:resource:: {}".format(name))
             reslis.append("   :type: {}\n".format(typ))
-            for k,v in prop.items():
-                reslis.append("    :{}: {}\n".format(k,v))
+            for k, v in prop.items():
+                reslis.append("    :{}: {}\n".format(k, v))
             reslis.append("")
 
         return '\n'.join(reslis)
@@ -49,7 +52,7 @@ class CfnExporter:
 
 class CfnParser(rst.Parser):
     supported = ()
-    
+
     def parse(self, inputstring, document):
         y = yaml.load(inputstring)
         exporter = CfnExporter()
@@ -58,6 +61,7 @@ class CfnParser(rst.Parser):
         print("parsed a document")
 
         rst.Parser.parse(self, rest, document)
+
 
 class CfnParserJson(rst.Parser):
     supported = ()
@@ -89,6 +93,7 @@ class CodeNode(docutils.nodes.Element):
                                             **kwargs)
         return cls(text, node)
 
+
 class CfnNode(ObjectDescription):
     """A custom node that represents Cfn elements."""
 
@@ -116,7 +121,7 @@ class CfnNode(ObjectDescription):
         print("SIGGY {}".format(sig))
         signode += addnodes.desc_name(text=sig)
         return sig
-    
+
     def add_target_and_index(self, name_cls, sig, signode):
         print("YEAH FOOBAR")
         signode['ids'].append(self.get_meta_type() + '-' + sig)
@@ -125,9 +130,15 @@ class CfnNode(ObjectDescription):
             objs = self.env.domaindata['cfn']['objects']
             index = self.env.domaindata['cfn']['object_index']
             index["{}.{}.{}".format('cfn', self.get_meta_type(), sig)] =\
-                  {'type': self.options.get('type')}
+                {'type': self.options.get('type')}
             print(self.get_meta_type() + '-' + sig)
-            objs.append(("{}.{}.{}".format('cfn', self.get_meta_type(), sig),sig,self.get_meta_type(), self.env.docname, self.get_meta_type() + '-' + sig, 0))
+            objs.append(("{}.{}.{}".format('cfn', self.get_meta_type(), sig),
+                         sig,
+                         self.get_meta_type(),
+                         self.env.docname,
+                         self.get_meta_type() + '-' + sig,
+                         0))
+
 
 class CfnParameter(CfnNode):
     required_arguments = 1
@@ -170,17 +181,14 @@ class CloudformationIndex(Index):
     def __init__(self, *args, **kwargs):
         super(CloudformationIndex, self).__init__(*args, **kwargs)
 
-        # During HTML generation these values pick from class,
-        # not from instance so we have a little hack the system
-        cls = self.__class__
-
     def generate(self, docnames=None):
         """Return entries for the index given by *name*.  If *docnames* is
         given, restrict to entries referring to these docnames.
 
-        The return value is a tuple of ``(content, collapse)``, where *collapse*
-        is a boolean that determines if sub-entries should start collapsed (for
-        output formats that support collapsing sub-entries).
+        The return value is a tuple of ``(content, collapse)``, where
+        * collapse* is a boolean that determines if sub-entries should
+        start collapsed (for output formats that support collapsing
+        sub-entries).
 
         *content* is a sequence of ``(letter, entries)`` tuples, where *letter*
         is the "heading" for the given *entries*, usually the starting letter.
@@ -201,6 +209,7 @@ class CloudformationIndex(Index):
         - `descr` -- description for the entry
 
         Qualifier and description are not rendered e.g. in LaTeX output.
+
         """
 
         print("YEAH HIT MY CODE")
@@ -209,7 +218,8 @@ class CloudformationIndex(Index):
 
         content = {}
         items = ((name, dispname, type, docname, anchor)
-                 for name, dispname, type, docname, anchor, prio  in self.domain.get_objects())
+                 for name, dispname, type, docname, anchor, prio
+                 in self.domain.get_objects())
         items = sorted(items, key=lambda item: item[0])
         for name, dispname, type, docname, anchor in items:
             lis = content.setdefault(type, [])
@@ -220,7 +230,7 @@ class CloudformationIndex(Index):
                 anchor,
                 docname, '', obj.get('type')
             ))
-        re = [ (k, v) for k, v in sorted(content.items()) ]
+        re = [(k, v) for k, v in sorted(content.items())]
 
         print(re)
         return (re, True)
@@ -239,10 +249,10 @@ class CfnDomain(Domain):
         'parameter': CfnParameter,
         'resource': CfnResource
     }
-    
+
     initial_data = {
         'objects': [],  # object list
-        'object_index': {}, # name -> object
+        'object_index': {},  # name -> object
     }
 
     indices = [
@@ -252,7 +262,10 @@ class CfnDomain(Domain):
     def get_full_qualified_name(self, node):
         # type: (nodes.Node) -> unicode
         """Return full qualified name for given node."""
-        return "{}.{}.{}.{}".format('cfn', type(node).__name__, node.options.get('Type'), node.arguments[0])
+        return "{}.{}.{}.{}".format('cfn',
+                                    type(node).__name__,
+                                    node.options.get('Type'),
+                                    node.arguments[0])
 
     def get_objects(self):
         """Return an iterable of "object descriptions", which are tuples with
@@ -273,7 +286,8 @@ class CfnDomain(Domain):
         """
         for obj in self.data['objects']:
             yield(obj)
-    
+
+
 def _add_cfn_parser(app):
     """Ugly hack to modify source_suffix and source_parsers.
     Once https://github.com/sphinx-doc/sphinx/pull/2209 is merged (and
@@ -297,8 +311,7 @@ def _add_cfn_parser(app):
 def setup(app):
     _add_cfn_parser(app)
 
-    #app.add_directive('cfn-res', CfnResource)
-    #app.add_directive('cfn-param', CfnParam)
     app.add_domain(CfnDomain)
 
-    app.add_node(CodeNode, html=(do_nothing, do_nothing), latex=(do_nothing, do_nothing))
+    app.add_node(CodeNode, html=(do_nothing, do_nothing),
+                 latex=(do_nothing, do_nothing))
