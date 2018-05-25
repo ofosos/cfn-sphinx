@@ -126,6 +126,7 @@ class CfnNode(ObjectDescription):
             index = self.env.domains['cfn'].object_index
             index["{}.{}.{}".format('cfn', self.get_meta_type(), self.arguments[0])] =\
                   self
+            print(self.get_meta_type() + '-' + self.arguments[0])
             objs.append(("{}.{}.{}".format('cfn', self.get_meta_type(), self.arguments[0]),self.arguments[0],self.get_meta_type(), self.env.docname, self.get_meta_type() + '-' + self.arguments[0], 0))
 
 class CfnParameter(CfnNode):
@@ -213,10 +214,11 @@ class CloudformationIndex(Index):
         for name, dispname, type, docname, anchor in items:
             lis = content.setdefault(type, [])
             obj = self.domain.object_index[name]
+            print("ANCHOR {}".format(anchor))
             lis.append((
                 dispname, 0, docname,
-                anchor , #FIXME resource anchor
-                '', '', obj.options.get('type')
+                anchor,
+                docname, '', obj.options.get('type')
             ))
         re = [ (k, v) for k, v in sorted(content.items()) ]
 
