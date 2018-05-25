@@ -41,8 +41,15 @@ class CfnExporter:
             typ = val['Type']
             prop = val['Properties']
 
+            vals = ['Description', 'Default', 'AllowedValues',
+                    'ConstraintDescription']
+
             reslis.append(".. cfn:resource:: {}".format(name))
             reslis.append("   :type: {}\n".format(typ))
+            for v in vals:
+                if v in val:
+                    reslis.append("    :{}: {}\n".format(v.lower(), val[v]))
+
             for k, v in prop.items():
                 reslis.append("    :{}: {}\n".format(k, v))
             reslis.append("")
@@ -120,6 +127,7 @@ class CfnNode(ObjectDescription):
     def handle_signature(self, sig, signode):
         print("SIGGY {}".format(sig))
         signode += addnodes.desc_name(text=sig)
+        signode += addnodes.desc_type(text=self.options.get('type'))
         return sig
 
     def add_target_and_index(self, name_cls, sig, signode):
@@ -161,7 +169,8 @@ class CfnResource(CfnNode):
     optional_arguments = 1  # 'rst' or nothing (which means literal text)
     final_argument_whitespace = False
     option_spec = {
-        'type': rst.directives.unchanged
+        'type': rst.directives.unchanged,
+        'description': rst.directives.unchanged
     }
     has_content = True
 
