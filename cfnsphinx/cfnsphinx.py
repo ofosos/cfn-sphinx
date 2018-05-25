@@ -114,20 +114,20 @@ class CfnNode(ObjectDescription):
 
     def handle_signature(self, sig, signode):
         print("SIGGY {}".format(sig))
-        signode += addnodes.desc_type(sig, '')
+        signode += addnodes.desc_name(text=sig)
         return sig
     
     def add_target_and_index(self, name_cls, sig, signode):
         print("YEAH FOOBAR")
-        signode['ids'].append(name_cls[0])
+        signode['ids'].append(self.get_meta_type() + '-' + sig)
         if 'noindex' not in self.options:
             print("APPEND {}".format(self))
             objs = self.env.domaindata['cfn']['objects']
-            index = self.env.domains['cfn'].object_index
-            index["{}.{}.{}".format('cfn', self.get_meta_type(), self.arguments[0])] =\
-                  self
-            print(self.get_meta_type() + '-' + self.arguments[0])
-            objs.append(("{}.{}.{}".format('cfn', self.get_meta_type(), self.arguments[0]),self.arguments[0],self.get_meta_type(), self.env.docname, self.get_meta_type() + '-' + self.arguments[0], 0))
+            index = self.env.domaindata['cfn']['object_index']
+            index["{}.{}.{}".format('cfn', self.get_meta_type(), sig)] =\
+                  {'type': self.options.get('type')}
+            print(self.get_meta_type() + '-' + sig)
+            objs.append(("{}.{}.{}".format('cfn', self.get_meta_type(), sig),sig,self.get_meta_type(), self.env.docname, self.get_meta_type() + '-' + sig, 0))
 
 class CfnParameter(CfnNode):
     required_arguments = 1
@@ -213,12 +213,12 @@ class CloudformationIndex(Index):
         items = sorted(items, key=lambda item: item[0])
         for name, dispname, type, docname, anchor in items:
             lis = content.setdefault(type, [])
-            obj = self.domain.object_index[name]
+            obj = self.domain.data['object_index'][name]
             print("ANCHOR {}".format(anchor))
             lis.append((
                 dispname, 0, docname,
                 anchor,
-                docname, '', obj.options.get('type')
+                docname, '', obj.get('type')
             ))
         re = [ (k, v) for k, v in sorted(content.items()) ]
 
@@ -242,10 +242,9 @@ class CfnDomain(Domain):
     
     initial_data = {
         'objects': [],  # object list
+        'object_index': {}, # name -> object
     }
 
-    object_index = {}
-    
     indices = [
         CloudformationIndex
     ]
