@@ -54,6 +54,19 @@ class CfnExporter:
                 reslis.append("    :{}: {}\n".format(k, v))
             reslis.append("")
 
+        for key, val in yml['Outputs'].items():
+            name = key
+
+            keylis = ['Description', 'Value']
+
+            reslis.append(".. cfn:output:: {}\n".format(name))
+            for lookup in keylis:
+                if lookup in val:
+                    reslis.append("     :{}: {}".format(lookup, val[lookup]))
+
+            reslis.append("")
+
+        print('\n'.join(reslis))
         return '\n'.join(reslis)
 
 
@@ -181,6 +194,28 @@ class CfnResource(CfnNode):
         return _('{} (Cfn Resource)') % (name_cls[0])
 
 
+class CfnOutput(CfnNode):
+    required_arguments = 1
+    optional_arguments = 1
+    final_argument_whitespace = False
+    option_spec = {
+        'description': rst.directives.unchanged,
+        'value': rst.directives.unchanged        
+    }
+    has_content = True
+
+    def handle_signature(self, sig, signode):
+        signode += addnodes.desc_name(text=sig)
+        signode += addnodes.desc_type(text='Output')
+        return sig
+
+    def get_meta_type(self):
+        return 'Output'
+
+    def get_index_text(self, stackname, name_cls):
+        return _('{} (Cfn Output)') % (name_cls[0])
+
+
 class CloudformationIndex(Index):
 
     name = 'cfn'
@@ -251,12 +286,14 @@ class CfnDomain(Domain):
 
     roles = {
         'param': XRefRole(),
-        'res': XRefRole()
+        'res': XRefRole(),
+        'out': XRefRole(),
     }
 
     directives = {
         'parameter': CfnParameter,
-        'resource': CfnResource
+        'resource': CfnResource,
+        'output': CfnOutput,
     }
 
     initial_data = {
