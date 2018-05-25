@@ -143,25 +143,6 @@ class CfnParameter(CfnNode):
     def get_index_text(self, stackname, name_cls):
         return _('{} (Cfn Parameter)') % (name_cls[0])
 
-    # def run(self):
-    #     classes = ['cfn-param']
-    #     container = docutils.nodes.container(classes=classes)
-
-    #     name = self.arguments[0]
-    #     typ = self.options.get('type')
-
-    #     container += CodeNode.create(name, classes=['cfn-param-name'])
-    #     container += CodeNode.create(typ, classes=['cfn-param-type'])
-
-    #     text = '\n'.join(self.content.data)
-    #     for k,v in self.options.items():
-    #         if k != 'type':
-    #             body = CodeNode.create(text, classes=['cfn-param-option'])
-
-    #             container += body
-
-    #     return [container]
-
 
 class CfnResource(CfnNode):
     required_arguments = 1
@@ -178,41 +159,6 @@ class CfnResource(CfnNode):
     def get_index_text(self, stackname, name_cls):
         return _('{} (Cfn Resource)') % (name_cls[0])
 
-    # def run(self):
-    #     classes = ['cfn-resource']
-    #     container = docutils.nodes.container(classes=classes)
-
-    #     name = self.arguments[0]
-    #     typ = self.options.get('type')
-
-    #     container += CodeNode.create(name, classes=['cfn-res-name'])
-    #     container += CodeNode.create(typ, classes=['cfn-res-type'])
-
-    #     text = '\n'.join(self.content.data)
-    #     body = CodeNode.create(text, classes=['cfn-res-definition'])
-
-    #     container += body
-
-    #     return [container]
-
-# class CloudformationIndex(Index):
-#     name = 'cfnindex'
-#     localname = l_("CloudFormation index")
-#     shortname = l_("Cfn")
-
-#     def generate(self, docnames=None):
-#         content = {}
-        
-#         objects = sorted(self.domain.data['objects'],
-#                          key=lambda x: x[0].lower())
-#         for objname, (docname, typ, desc) in objects:
-#             if docnames and docname not in docnames:
-#                 continue
-#             entries = content.setdefault(modname[0], [])
-#             entries.append([objname, typ, docname,
-#                             'object-' + objname, desc])
-#         content = sorted(list(content.items()))
-#         return content, True
 
 class CloudformationIndex(Index):
 
