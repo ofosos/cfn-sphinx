@@ -49,7 +49,7 @@ class CfnExporter:
 
 class CfnParser(rst.Parser):
     supported = ()
-
+    
     def parse(self, inputstring, document):
         y = yaml.load(inputstring)
         exporter = CfnExporter()
@@ -126,7 +126,7 @@ class CfnNode(ObjectDescription):
             index = self.env.domains['cfn'].object_index
             index["{}.{}.{}".format('cfn', self.get_meta_type(), self.arguments[0])] =\
                   self
-            objs.append(("{}.{}.{}".format('cfn', self.get_meta_type(), self.arguments[0]),self.arguments[0],self.get_meta_type(), 'foo', self.get_meta_type() + '-' + self.arguments[0], 0))
+            objs.append(("{}.{}.{}".format('cfn', self.get_meta_type(), self.arguments[0]),self.arguments[0],self.get_meta_type(), self.env.docname, self.get_meta_type() + '-' + self.arguments[0], 0))
 
 class CfnParameter(CfnNode):
     required_arguments = 1
@@ -163,7 +163,7 @@ class CfnParameter(CfnNode):
     #     return [container]
 
 
-class CfnResource(CfnParameter):
+class CfnResource(CfnNode):
     required_arguments = 1
     optional_arguments = 1  # 'rst' or nothing (which means literal text)
     final_argument_whitespace = False
