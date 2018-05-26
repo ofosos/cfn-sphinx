@@ -9,6 +9,7 @@ from sphinx.locale import l_, _
 from sphinx.domains import Domain, ObjType, Index
 from sphinx.roles import XRefRole
 from sphinx.directives import ObjectDescription
+from sphinx.util.nodes import make_refnode
 from sphinx.util.docfields import Field, GroupedField, TypedField
 from sphinx import addnodes
 
@@ -332,6 +333,20 @@ class CfnDomain(Domain):
         """
         for obj in self.data['objects']:
             yield(obj)
+
+    def resolve_xref(self, env, fromdocname, builder, typ,
+                     target, node, contnode):
+        lookup = {
+            'res': 'Resource',
+            'out': 'Output',
+            'param': 'Parameter',
+        }
+        meta = lookup[typ]
+
+        todoc, targ = target.split(':', 1)
+        return make_refnode(builder, fromdocname, todoc,
+                            meta + '-' + targ,
+                            contnode, targ)
 
 
 def _add_cfn_parser(app):
