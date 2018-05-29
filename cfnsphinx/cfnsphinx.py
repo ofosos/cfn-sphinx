@@ -2,7 +2,9 @@ from docutils.parsers import rst
 import docutils
 import sphinx
 import yaml
+import requests, json
 
+link_to_aws_json='https://d68hl49wbnanq.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json'
 
 class CfnExporter:
     def from_yaml(self, yml):
@@ -44,13 +46,21 @@ class CodeNode(docutils.nodes.Element):
     """A custom node that contains a literal_block node."""
 
     @classmethod
-    def create(cls, text, language='none', **kwargs):
+    def create(cls, text, data={}, language='none', **kwargs):
         """Create a new CodeNode containing a literal_block node.
         Apparently, this cannot be done in CodeNode.__init__(), see:
         https://groups.google.com/forum/#!topic/sphinx-dev/0chv7BsYuW0
         """
-        node = docutils.nodes.literal_block(text, text, language=language,
-                                            **kwargs)
+
+        #default: just return a literal_block with the text in it
+        node = docutils.nodes.literal_block(text, text, language=language, **kwargs)
+
+        #check if we can upgrade this into an aws documentation link
+        doc_link = data.get("ResourceTypes",{}).get(text,{}).get("Documentation",{})
+        if doc_link:
+            referencenode = docutils.nodes.reference(text, text, refuri=doc_link, **kwargs)
+            node = docutils.nodes.literal_block(" ", " ", referencenode, **kwargs)
+
         return cls(text, node)
 
 
@@ -70,11 +80,18 @@ class CfnResource(rst.Directive):
         name = self.arguments[0]
         typ = self.options.get('type')
 
-        container += CodeNode.create(name, classes=['cfn-res-name'])
-        container += CodeNode.create(typ, classes=['cfn-res-type'])
+        # get the aws documentation links as json
+        try:
+            response = requests.get(link_to_aws_json).text
+            aws_doc = json.loads(response)
+        except:
+            raise Exception('Downloading and converting the aws documentation references failed.')
+
+        container += CodeNode.create(name, classes=['cfn-res-name'], data=aws_doc)
+        container += CodeNode.create(typ, classes=['cfn-res-type'], data=aws_doc)
 
         text = '\n'.join(self.content.data)
-        body = CodeNode.create(text, classes=['cfn-res-definition'])
+        body = CodeNode.create(text, classes=['cfn-res-definition'], data=aws_doc)
 
         container += body
 
