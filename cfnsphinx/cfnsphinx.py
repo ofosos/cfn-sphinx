@@ -82,7 +82,7 @@ class CfnExporter:
             reslis.append(".. cfn:output:: {}\n".format(name))
             for lookup in keylis:
                 if lookup in val:
-                    reslis.append("     :{}: {}".format(lookup, val[lookup]))
+                    reslis.append("     :{}: {}".format(lookup, (" " * 6) + self.format(val[lookup], 6)))
 
             reslis.append("")
 
