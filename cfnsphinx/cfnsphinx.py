@@ -58,6 +58,19 @@ class CfnExporter:
 
             reslis.append("")
 
+        name = "Mappings"
+        reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
+                                              name, "*" * len(name)))
+
+        for key, val in yml['Mappings'].items():
+            name = key
+            typ = 'Mapping'
+
+            reslis.append(".. cfn:mapping:: {}\n".format(name))
+            reslis.append((" " * 6) + self.format(val, 6))
+
+            reslis.append("")
+
         name = "Resources"
         reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
                                               name, "*" * len(name)))
@@ -208,6 +221,20 @@ class CfnParameter(CfnNode):
     def get_index_text(self, stackname, name_cls):
         return _('{} (Cfn Parameter)') % (name_cls[0])
 
+class CfnMapping(CfnNode):
+    required_arguments = 1
+    optional_arguments = 1  # 'rst' or nothing (which means literal text)
+    final_argument_whitespace = False
+    option_spec = {
+    }
+    has_content = True
+
+    def get_meta_type(self):
+        return 'Mapping'
+
+    def get_index_text(self, stackname, name_cls):
+        return _('{} (Cfn Mapping)') % (name_cls[0])
+
 
 class CfnResource(CfnNode):
     required_arguments = 1
@@ -320,12 +347,14 @@ class CfnDomain(Domain):
         'param': XRefRole(),
         'res': XRefRole(),
         'out': XRefRole(),
+        'map': XRefRole(),
     }
 
     directives = {
         'parameter': CfnParameter,
         'resource': CfnResource,
         'output': CfnOutput,
+        'mapping': CfnMapping,
     }
 
     initial_data = {
@@ -371,6 +400,7 @@ class CfnDomain(Domain):
             'res': 'Resource',
             'out': 'Output',
             'param': 'Parameter',
+            'map': 'Mapping',
         }
         meta = lookup[typ]
 
