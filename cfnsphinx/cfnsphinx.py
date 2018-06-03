@@ -39,6 +39,10 @@ class CfnExporter:
         reslis.append("{}\n{}\n{}\n\n".format("=" * len(name),
                                               name, "=" * len(name)))
         
+        name = "Parameters"
+        reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
+                                              name, "*" * len(name)))
+
         for key, val in yml['Parameters'].items():
             name = key
             typ = val['Type']
@@ -54,6 +58,10 @@ class CfnExporter:
 
             reslis.append("")
 
+        name = "Resources"
+        reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
+                                              name, "*" * len(name)))
+            
         for key, val in yml['Resources'].items():
             name = key
             typ = val['Type']
@@ -73,6 +81,10 @@ class CfnExporter:
                 reslis.append("    :{}:\n".format(k))
                 reslis.append((" " * 5) + self.format(v, 5))
             reslis.append("")
+
+        name = "Outputs"
+        reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
+                                              name, "*" * len(name)))
 
         for key, val in yml['Outputs'].items():
             name = key
