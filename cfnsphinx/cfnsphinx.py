@@ -15,6 +15,23 @@ from sphinx import addnodes
 
 
 class CfnExporter:
+    def format(self, yml, nesting):
+        res = ""
+        if type(yml) is type([]):
+            for el in yml:
+                if type(el) is type(""):
+                    res = res + "* " + el + "\n" + (" " * nesting)
+                else:
+                    res = res + "* " + self.format(el, nesting + 1) + "\n" + (" " * nesting)
+        elif type(yml) is type({}):
+            res = res + "\n" + (" " * (nesting))
+            for k, v in yml.items():
+                res = res + k + "\n" + (" " * (nesting + 2)) + self.format(v, nesting + 2) + "\n" + (" " * nesting)
+        else: #string, int, float?
+            return str(yml)
+
+        return res
+    
     def from_yaml(self, yml):
         reslis = []
 
@@ -49,10 +66,12 @@ class CfnExporter:
             reslis.append("   :type: {}\n".format(typ))
             for v in vals:
                 if v in val:
-                    reslis.append("    :{}: {}\n".format(v.lower(), val[v]))
+                    reslis.append("    :{}:\n".format(v.lower()))
+                    reslis.append((" " * 5) + self.format(val[v], 5))
 
             for k, v in prop.items():
-                reslis.append("    :{}: {}\n".format(k, v))
+                reslis.append("    :{}:\n".format(k))
+                reslis.append((" " * 5) + self.format(v, 5))
             reslis.append("")
 
         for key, val in yml['Outputs'].items():
