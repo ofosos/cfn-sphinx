@@ -38,78 +38,97 @@ class CfnExporter:
         name = "CfnStack"
         reslis.append("{}\n{}\n{}\n\n".format("=" * len(name),
                                               name, "=" * len(name)))
-        
-        name = "Parameters"
-        reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
-                                              name, "*" * len(name)))
 
-        for key, val in yml['Parameters'].items():
-            name = key
-            typ = val['Type']
+        if 'Parameters' in yml:
+            name = "Parameters"
+            reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
+                                                  name, "*" * len(name)))
 
-            vals = ['Description', 'Default', 'AllowedValues',
-                    'ConstraintDescription']
+            for key, val in yml['Parameters'].items():
+                name = key
+                typ = val['Type']
 
-            reslis.append(".. cfn:parameter:: {}".format(name))
-            reslis.append("    :type: {}\n".format(typ))
-            for v in vals:
-                if v in val:
-                    reslis.append("    :{}: {}\n".format(v.lower(), val[v]))
+                vals = ['Description', 'Default', 'AllowedValues',
+                        'ConstraintDescription']
 
-            reslis.append("")
+                reslis.append(".. cfn:parameter:: {}".format(name))
+                reslis.append("    :type: {}\n".format(typ))
+                for v in vals:
+                    if v in val:
+                        reslis.append("    :{}: {}\n".format(v.lower(), val[v]))
 
-        name = "Mappings"
-        reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
-                                              name, "*" * len(name)))
+                reslis.append("")
 
-        for key, val in yml['Mappings'].items():
-            name = key
-            typ = 'Mapping'
+        if 'Mappings' in yml:
+            name = "Mappings"
+            reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
+                                                  name, "*" * len(name)))
 
-            reslis.append(".. cfn:mapping:: {}\n".format(name))
-            reslis.append((" " * 6) + self.format(val, 6))
+            for key, val in yml['Mappings'].items():
+                name = key
+                typ = 'Mapping'
 
-            reslis.append("")
+                reslis.append(".. cfn:mapping:: {}\n".format(name))
+                reslis.append((" " * 6) + self.format(val, 6))
 
-        name = "Resources"
-        reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
-                                              name, "*" * len(name)))
-            
-        for key, val in yml['Resources'].items():
-            name = key
-            typ = val['Type']
-            prop = val['Properties']
+                reslis.append("")
 
-            vals = ['Description', 'Default', 'AllowedValues',
-                    'ConstraintDescription']
+        if 'Conditions' in yml:
+            name = "Conditions"
+            reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
+                                                  name, "*" * len(name)))
 
-            reslis.append(".. cfn:resource:: {}".format(name))
-            reslis.append("   :type: {}\n".format(typ))
-            for v in vals:
-                if v in val:
-                    reslis.append("    :{}:\n".format(v.lower()))
-                    reslis.append((" " * 5) + self.format(val[v], 5))
+            for key, val in yml['Conditions'].items():
+                name = key
+                typ = 'Condition'
 
-            for k, v in prop.items():
-                reslis.append("    :{}:\n".format(k))
-                reslis.append((" " * 5) + self.format(v, 5))
-            reslis.append("")
+                reslis.append(".. cfn:condition:: {}\n".format(name))
+                reslis.append((" " * 6) + self.format(val, 6))
 
-        name = "Outputs"
-        reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
-                                              name, "*" * len(name)))
+                reslis.append("")
 
-        for key, val in yml['Outputs'].items():
-            name = key
 
-            keylis = ['Description', 'Value']
+            name = "Resources"
+            reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
+                                                  name, "*" * len(name)))
 
-            reslis.append(".. cfn:output:: {}\n".format(name))
-            for lookup in keylis:
-                if lookup in val:
-                    reslis.append("     :{}: {}".format(lookup, (" " * 6) + self.format(val[lookup], 6)))
+        if 'Resources' in yml:
+            for key, val in yml['Resources'].items():
+                name = key
+                typ = val['Type']
+                prop = val['Properties']
 
-            reslis.append("")
+                vals = ['Description', 'Default', 'AllowedValues',
+                        'ConstraintDescription']
+
+                reslis.append(".. cfn:resource:: {}".format(name))
+                reslis.append("   :type: {}\n".format(typ))
+                for v in vals:
+                    if v in val:
+                        reslis.append("    :{}:\n".format(v.lower()))
+                        reslis.append((" " * 5) + self.format(val[v], 5))
+
+                for k, v in prop.items():
+                    reslis.append("    :{}:\n".format(k))
+                    reslis.append((" " * 5) + self.format(v, 5))
+                reslis.append("")
+
+        if 'Outputs' in yml:
+            name = "Outputs"
+            reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
+                                                  name, "*" * len(name)))
+
+            for key, val in yml['Outputs'].items():
+                name = key
+
+                keylis = ['Description', 'Value']
+
+                reslis.append(".. cfn:output:: {}\n".format(name))
+                for lookup in keylis:
+                    if lookup in val:
+                        reslis.append("     :{}: {}".format(lookup, (" " * 6) + self.format(val[lookup], 6)))
+
+                reslis.append("")
 
         print('\n'.join(reslis))
         return '\n'.join(reslis)
@@ -236,6 +255,21 @@ class CfnMapping(CfnNode):
         return _('{} (Cfn Mapping)') % (name_cls[0])
 
 
+class CfnCondition(CfnNode):
+    required_arguments = 1
+    optional_arguments = 1  # 'rst' or nothing (which means literal text)
+    final_argument_whitespace = False
+    option_spec = {
+    }
+    has_content = True
+
+    def get_meta_type(self):
+        return 'Condition'
+
+    def get_index_text(self, stackname, name_cls):
+        return _('{} (Cfn Condition)') % (name_cls[0])
+
+
 class CfnResource(CfnNode):
     required_arguments = 1
     optional_arguments = 1  # 'rst' or nothing (which means literal text)
@@ -348,6 +382,7 @@ class CfnDomain(Domain):
         'res': XRefRole(),
         'out': XRefRole(),
         'map': XRefRole(),
+        'cnd': XRefRole(),
     }
 
     directives = {
@@ -355,6 +390,7 @@ class CfnDomain(Domain):
         'resource': CfnResource,
         'output': CfnOutput,
         'mapping': CfnMapping,
+        'condition': CfnCondition,
     }
 
     initial_data = {
@@ -401,6 +437,7 @@ class CfnDomain(Domain):
             'out': 'Output',
             'param': 'Parameter',
             'map': 'Mapping',
+            'cnd': 'Condition',
         }
         meta = lookup[typ]
 
