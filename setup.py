@@ -36,4 +36,8 @@ setup(
     include_package_data=True,
     install_requires=requires,
     namespace_packages=['cfnsphinx'],
+    entry_points = {
+        'console_scripts': ['cfnsphinx-build=cfnsphinx.cfn_build:main'],
+    },
+
 )

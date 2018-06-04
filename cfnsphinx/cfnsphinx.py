@@ -2,8 +2,6 @@ from docutils.parsers import rst
 from os.path import basename
 import docutils
 import sphinx
-import yaml
-import json
 from docutils.parsers.rst import directives
 from sphinx.locale import l_, _
 from sphinx.domains import Domain, ObjType, Index
@@ -12,152 +10,6 @@ from sphinx.directives import ObjectDescription
 from sphinx.util.nodes import make_refnode
 from sphinx.util.docfields import Field, GroupedField, TypedField
 from sphinx import addnodes
-
-
-class CfnExporter:
-    def format(self, yml, nesting):
-        res = ""
-        if type(yml) is type([]):
-            for el in yml:
-                if type(el) is type(""):
-                    res = res + "* " + el + "\n" + (" " * nesting)
-                else:
-                    res = res + "* " + self.format(el, nesting + 1) + "\n" + (" " * nesting)
-        elif type(yml) is type({}):
-            res = res + "\n" + (" " * (nesting))
-            for k, v in yml.items():
-                res = res + k + "\n" + (" " * (nesting + 2)) + self.format(v, nesting + 2) + "\n" + (" " * nesting)
-        else: #string, int, float?
-            return str(yml)
-
-        return res
-    
-    def from_yaml(self, yml):
-        reslis = []
-
-        name = "CfnStack"
-        reslis.append("{}\n{}\n{}\n\n".format("=" * len(name),
-                                              name, "=" * len(name)))
-
-        if 'Parameters' in yml:
-            name = "Parameters"
-            reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
-                                                  name, "*" * len(name)))
-
-            for key, val in yml['Parameters'].items():
-                name = key
-                typ = val['Type']
-
-                vals = ['Description', 'Default', 'AllowedValues',
-                        'ConstraintDescription']
-
-                reslis.append(".. cfn:parameter:: {}".format(name))
-                reslis.append("    :type: {}\n".format(typ))
-                for v in vals:
-                    if v in val:
-                        reslis.append("    :{}: {}\n".format(v.lower(), val[v]))
-
-                reslis.append("")
-
-        if 'Mappings' in yml:
-            name = "Mappings"
-            reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
-                                                  name, "*" * len(name)))
-
-            for key, val in yml['Mappings'].items():
-                name = key
-                typ = 'Mapping'
-
-                reslis.append(".. cfn:mapping:: {}\n".format(name))
-                reslis.append((" " * 6) + self.format(val, 6))
-
-                reslis.append("")
-
-        if 'Conditions' in yml:
-            name = "Conditions"
-            reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
-                                                  name, "*" * len(name)))
-
-            for key, val in yml['Conditions'].items():
-                name = key
-                typ = 'Condition'
-
-                reslis.append(".. cfn:condition:: {}\n".format(name))
-                reslis.append((" " * 6) + self.format(val, 6))
-
-                reslis.append("")
-
-
-            name = "Resources"
-            reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
-                                                  name, "*" * len(name)))
-
-        if 'Resources' in yml:
-            for key, val in yml['Resources'].items():
-                name = key
-                typ = val['Type']
-                prop = val['Properties']
-
-                vals = ['Description', 'Default', 'AllowedValues',
-                        'ConstraintDescription']
-
-                reslis.append(".. cfn:resource:: {}".format(name))
-                reslis.append("   :type: {}\n".format(typ))
-                for v in vals:
-                    if v in val:
-                        reslis.append("    :{}:\n".format(v.lower()))
-                        reslis.append((" " * 5) + self.format(val[v], 5))
-
-                for k, v in prop.items():
-                    reslis.append("    :{}:\n".format(k))
-                    reslis.append((" " * 5) + self.format(v, 5))
-                reslis.append("")
-
-        if 'Outputs' in yml:
-            name = "Outputs"
-            reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
-                                                  name, "*" * len(name)))
-
-            for key, val in yml['Outputs'].items():
-                name = key
-
-                keylis = ['Description', 'Value']
-
-                reslis.append(".. cfn:output:: {}\n".format(name))
-                for lookup in keylis:
-                    if lookup in val:
-                        reslis.append("     :{}: {}".format(lookup, (" " * 6) + self.format(val[lookup], 6)))
-
-                reslis.append("")
-
-        print('\n'.join(reslis))
-        return '\n'.join(reslis)
-
-
-class CfnParser(rst.Parser):
-    supported = ()
-
-    def parse(self, inputstring, document):
-        y = yaml.load(inputstring)
-        exporter = CfnExporter()
-        rest = exporter.from_yaml(y)
-
-        print("parsed a document")
-
-        rst.Parser.parse(self, rest, document)
-
-
-class CfnParserJson(rst.Parser):
-    supported = ()
-
-    def parse(self, inputstring, document):
-        y = json.loads(inputstring)
-        exporter = CfnExporter()
-        rest = exporter.from_yaml(y)
-
-        print("parsed a document")
-
-        rst.Parser.parse(self, rest, document)
 
 
 def do_nothing(self, node):
@@ -447,29 +299,7 @@ class CfnDomain(Domain):
                             contnode, targ)
 
 
-def _add_cfn_parser(app):
-    """Ugly hack to modify source_suffix and source_parsers.
-    Once https://github.com/sphinx-doc/sphinx/pull/2209 is merged (and
-    some additional time has passed), this should be replaced by ::
-        app.add_source_parser('.ipynb', NotebookParser)
-    See also https://github.com/sphinx-doc/sphinx/issues/2162.
-    """
-    source_suffix = app.config._raw_config.get('source_suffix', ['.rst'])
-    if isinstance(source_suffix, sphinx.config.string_types):
-        source_suffix = [source_suffix]
-    if '.yml' not in source_suffix:
-        source_suffix.append('.yml')
-        app.config._raw_config['source_suffix'] = source_suffix
-    source_parsers = app.config._raw_config.get('source_parsers', {})
-    if '.yml' not in source_parsers and 'yml' not in source_parsers:
-        source_parsers['.yml'] = CfnParser
-        source_parsers['.json'] = CfnParserJson
-        app.config._raw_config['source_parsers'] = source_parsers
-
-
 def setup(app):
-    _add_cfn_parser(app)
-
     app.add_domain(CfnDomain)
 
     app.add_node(CodeNode, html=(do_nothing, do_nothing),
