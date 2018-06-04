@@ -23,7 +23,7 @@ class CfnExporter:
     def from_data(self, yml, document):
         reslis = []
 
-        name = "CfnStack"
+        name = document
         reslis.append("{}\n{}\n{}\n\n".format("=" * len(name),
                                               name, "=" * len(name)))
 

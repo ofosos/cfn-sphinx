@@ -1,5 +1,7 @@
 from cfnsphinx.cfn_gen import CfnParserJson, CfnParserYaml
 import argparse
+from re import match
+from os.path import basename
 
 class CfnBuilder:
     @classmethod
@@ -7,13 +9,16 @@ class CfnBuilder:
         print("Processing {}...".format(args.input))
         out = ""
 
+        bname = basename(args.input)
+        m = match(r'(.+)(\..+)?', bname)
+        docname, _ = m.groups()
         with open(args.input, 'r') as f:
             data = f.read()
 
             if args.json:
-                out = CfnParserJson.parse(data, args.input)
+                out = CfnParserJson.parse(data, docname)
             else:
-                out = CfnParserYaml.parse(data, args.input)
+                out = CfnParserYaml.parse(data, docname)
 
         with open(args.output, 'w') as fo:
             fo.write(out)
