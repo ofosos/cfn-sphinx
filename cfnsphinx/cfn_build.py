@@ -10,7 +10,7 @@ class CfnBuilder:
         out = ""
 
         bname = basename(args.input)
-        m = match(r'(.+)(\..+)?', bname)
+        m = match(r'^(.+)(\..+)$', bname)
         docname, _ = m.groups()
         with open(args.input, 'r') as f:
             data = f.read()
