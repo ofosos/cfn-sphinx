@@ -75,12 +75,11 @@ class CfnExporter:
 
                 reslis.append("")
 
-
+        if 'Resources' in yml:
             name = "Resources"
             reslis.append("{}\n{}\n{}\n\n".format("*" * len(name),
                                                   name, "*" * len(name)))
 
-        if 'Resources' in yml:
             for key, val in yml['Resources'].items():
                 name = key
                 typ = val['Type']
