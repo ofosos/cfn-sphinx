@@ -1,6 +1,7 @@
 from docutils.parsers import rst
 from os.path import basename
 import docutils
+from docutils import nodes
 import sphinx
 from docutils.parsers.rst import directives
 from sphinx.locale import l_, _
@@ -10,7 +11,7 @@ from sphinx.directives import ObjectDescription
 from sphinx.util.nodes import make_refnode
 from sphinx.util.docfields import Field, GroupedField, TypedField
 from sphinx import addnodes
-
+import requests
 
 def do_nothing(self, node):
     pass
@@ -53,10 +54,13 @@ class CfnNode(ObjectDescription):
         """
         raise NotImplementedError('must be implemented in subclasses')
 
+    def get_type_node(self):
+        return addnodes.desc_type(text=self.options.get('type'))
+
     def handle_signature(self, sig, signode):
         print("SIGGY {}".format(sig))
         signode += addnodes.desc_name(text=sig)
-        signode += addnodes.desc_type(text=self.options.get('type'))
+        signode += self.get_type_node()
         return sig
 
     def add_target_and_index(self, name_cls, sig, signode):
@@ -131,6 +135,22 @@ class CfnResource(CfnNode):
         'description': rst.directives.unchanged
     }
     has_content = True
+
+    def get_type_node(self):
+        typename = self.options.get('type')
+        awsref = ''
+
+        if not 'cfncache' in self.env.domaindata['cfn']:
+            r = requests.get('https://d1mta8qj7i28i2.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json')
+            self.env.domaindata['cfn']['cfncache'] = r.json()
+        cfncache = self.env.domaindata['cfn']['cfncache']
+        awsref = cfncache['ResourceTypes'][typename]['Documentation']
+
+        return nodes.reference(typename,
+                               typename,
+                               internal=False,
+                               refuri=awsref,
+                               classes=['awslink'])
 
     def get_meta_type(self):
         return 'Resource'
