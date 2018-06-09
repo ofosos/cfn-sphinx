@@ -58,21 +58,17 @@ class CfnNode(ObjectDescription):
         return addnodes.desc_type(text=self.options.get('type'))
 
     def handle_signature(self, sig, signode):
-        print("SIGGY {}".format(sig))
         signode += addnodes.desc_name(text=sig)
         signode += self.get_type_node()
         return sig
 
     def add_target_and_index(self, name_cls, sig, signode):
-        print("YEAH FOOBAR")
         signode['ids'].append(self.get_meta_type() + '-' + sig)
         if 'noindex' not in self.options:
-            print("APPEND {}".format(self))
             objs = self.env.domaindata['cfn']['objects']
             index = self.env.domaindata['cfn']['object_index']
             index["{}.{}.{}".format('cfn', self.get_meta_type(), sig)] =\
                 {'type': self.options.get('type')}
-            print(self.get_meta_type() + '-' + sig)
             objs.append(("{}.{}.{}".format('cfn', self.get_meta_type(), sig),
                          sig,
                          self.get_meta_type(),
@@ -224,10 +220,6 @@ class CloudformationIndex(Index):
 
         """
 
-        print("YEAH HIT MY CODE")
-        for obj in self.domain.get_objects():
-            print("DOMAIN {}".format(obj))
-
         content = {}
         items = ((name, dispname, type, docname, anchor)
                  for name, dispname, type, docname, anchor, prio
@@ -236,7 +228,6 @@ class CloudformationIndex(Index):
         for name, dispname, type, docname, anchor in items:
             lis = content.setdefault(type, [])
             obj = self.domain.data['object_index'][name]
-            print("ANCHOR {}".format(anchor))
             lis.append((
                 dispname, 0, docname,
                 anchor,
@@ -244,7 +235,6 @@ class CloudformationIndex(Index):
             ))
         re = [(k, v) for k, v in sorted(content.items())]
 
-        print(re)
         return (re, True)
 
 
