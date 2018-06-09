@@ -141,8 +141,11 @@ class CfnResource(CfnNode):
         awsref = ''
 
         if not 'cfncache' in self.env.domaindata['cfn']:
-            r = requests.get('https://d1mta8qj7i28i2.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json')
-            self.env.domaindata['cfn']['cfncache'] = r.json()
+            try:
+                r = requests.get('https://d1mta8qj7i28i2.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json')
+                self.env.domaindata['cfn']['cfncache'] = r.json()
+            except:
+                print("Error downloading CFN reference JSON.")
         cfncache = self.env.domaindata['cfn']['cfncache']
         awsref = cfncache['ResourceTypes'][typename]['Documentation']
 
